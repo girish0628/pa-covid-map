@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>leaflet basic example</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/MarkerCluster.Default.css" />
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/leaflet.markercluster.js"></script>
+        <script src="exp_popplaces.js"></script>
+        <script src="pa_covid19.js"></script>
+        <script src="exp_ne10mparksandprotectedlandspoint.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.min.js"></script>
+
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
+<style>
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            html, body, #map {
+                height: 100%;
+            }
+            .footer {
+               position: fixed;
+               left: 0;
+               bottom: 0;
+               width: 100%;
+               color: white;
+               text-align: center;
+               z-index: 1
+            }
+        </style>
+
+    </head>
+    <body>
+
+<div id="map">
+  <div class="footer">
+    <div id="slider" style="top: 0px; right: 1px; margin: 10px 25px;"></div>
+    <div style="margin-right: auto; margin-left: auto; width: 90%; margin-bottom: 10px; text-align: center;">
+    <input type="number" min='1' max='35675999' id="input-number-min">
+    <input type="number" min='2' max='35676000' id="input-number-max">
+    </div>
+  </div>
+
+</div>
+
+
+        <script>
+        // var map = L.map('map', {
+        //     zoomControl:true, maxZoom:19
+        // }).fitBounds([[-22.6665544576,-206.634809944],[100.520856024,-21.8536942211]]);
+
+        var map = L.map('map', {
+                zoomControl:true,
+                maxZoom:19
+              }).setView([40.913720, -77.773836], 8);
+
+        var basemap_0 = L.tileLayer('http://{s}.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png');
+        basemap_0.addTo(map);
+        // get color depending on population density value
+          function getColor(d) {
+            return d > 1000 ? '#800026' :
+                d > 500  ? '#BD0026' :
+                d > 200  ? '#E31A1C' :
+                d > 100  ? '#FC4E2A' :
+                d > 50   ? '#FD8D3C' :
+                d > 20   ? '#FEB24C' :
+                d > 10   ? '#FED976' :
+                      '#FFEDA0';
+          }
+
+          function style(feature) {
+            return {
+              weight: 2,
+              opacity: 1,
+              color: 'white',
+              dashArray: '3',
+              fillOpacity: 0.7,
+              fillColor: getColor(feature.properties.density)
+            };
+          }
+
+        // function pop_prot(feature, layer) {
+        //     var popupContent = 'name: ' + String(feature.properties['unit_name']);
+        //     layer.bindPopup(popupContent);
+        // }
+        // function protecland_marker(feature, latlng) {
+        //     return L.circleMarker(latlng, {
+        //         radius: 8.0,
+        //         fillColor: '#11fe00',
+        //         color: '#000000',
+        //         weight: 1,
+        //         opacity: 1.0,
+        //         fillOpacity: 0.8
+        //     })
+        // }
+        // var protecland = new L.geoJson(exp_ne10mparksandprotectedlandspoint,{
+        //     onEachFeature: pop_prot,
+        //     pointToLayer: protecland_marker
+        // });
+        // protecland.addTo(map);
+        // function pop_popplaces(feature, layer) {
+        //     var popupContent = 'name: ' + String(feature.properties['name']) + '<br>pop_max: ' + String(feature.properties['pop_max']);
+        //     layer.bindPopup(popupContent);
+        // }
+        // function popplaces_marker(feature, latlng) {
+        //     return L.circleMarker(latlng, {
+        //         radius: 8.0,
+        //         fillColor: '#ff0000',
+        //         color: '#000000',
+        //         weight: 1,
+        //         opacity: 1.0,
+        //         fillOpacity: 0.8
+        //     })
+        // }
+        // var popplaces = new L.geoJson(exp_popplaces,{
+        //     onEachFeature: pop_popplaces,
+        //     pointToLayer: popplaces_marker
+        // });
+        // var cluster_popplaces= new L.MarkerClusterGroup({showCoverageOnHover: false});
+        // cluster_popplaces.addLayer(popplaces);
+        // cluster_popplaces.addTo(map);
+
+        var geojson = L.geoJson(pa_covid, {
+                        style: style,
+                      }).addTo(map);
+
+
+        var baseMaps = {'OSM Black & White': basemap_0};
+        controler = L.control.layers(baseMaps,
+              {
+                // "places": cluster_popplaces,
+                // "protected land points": protecland,
+                "COVID 19": geojson
+              },{collapsed:false}).addTo(map);
+
+        var slidervar = document.getElementById('slider');
+            noUiSlider.create(slidervar, {
+                connect: true,
+                start: [ 1, 35676000 ],
+                range: {
+                    min: 1,
+                    max: 35676000
+                }
+            });
+    </script>
+</body>
+</html>
