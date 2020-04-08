@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>leaflet basic example</title>
+        <title>Pittsburgh || Covid 19 MAP</title>
         <meta charset="utf-8" />
         <link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.min.css" />
@@ -36,28 +36,41 @@
     <body>
 
 <div id="map">
-  <div class="footer">
-    <div id="slider" style="top: 0px; right: 1px; margin: 10px 25px;"></div>
-    <div style="margin-right: auto; margin-left: auto; width: 90%; margin-bottom: 10px; text-align: center;">
-    <input type="number" min='1' max='35675999' id="input-number-min">
-    <input type="number" min='2' max='35676000' id="input-number-max">
-    </div>
+</div>
+<div class="footer">
+  <div id="slider" style="top: 0px; right: 1px; margin: 10px 25px;"></div>
+  <div style="margin-right: auto; margin-left: auto; width: 90%; margin-bottom: 10px; text-align: center;">
+  <div id="date"></div>
   </div>
-
 </div>
 
-
         <script>
-        // var map = L.map('map', {
-        //     zoomControl:true, maxZoom:19
-        // }).fitBounds([[-22.6665544576,-206.634809944],[100.520856024,-21.8536942211]]);
+        var center = [40.913720, -77.773836],
+            zoom = 8,
+            mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>',
+            mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+            '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+            'Imagery Â© <a href="https://www.mapbox.com/">Mapbox</a>',
+            mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
+            maxZoom = 18,
+            osm_url = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
 
         var map = L.map('map', {
                 zoomControl:true,
-                maxZoom:19
-              }).setView([40.913720, -77.773836], 8);
+                maxZoom:maxZoom
+              }).setView(center, zoom);
 
         var basemap_0 = L.tileLayer('http://{s}.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png');
+        const grayscale  = L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: mbAttr}),
+        streets  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: mbAttr}),
+         osm_lyr = L.tileLayer( osm_url, {attribution: '' + mapLink + ' Contributors', maxZoom: maxZoom,});
+        const base_layers = {
+          "Grayscale": grayscale,
+          "Streets": streets,
+          "OSM": osm_lyr,
+          "Mapnik": basemap_0
+          };
         basemap_0.addTo(map);
         // get color depending on population density value
           function getColor(d) {
@@ -81,70 +94,83 @@
               fillColor: getColor(feature.properties.density)
             };
           }
-
-        // function pop_prot(feature, layer) {
-        //     var popupContent = 'name: ' + String(feature.properties['unit_name']);
-        //     layer.bindPopup(popupContent);
-        // }
-        // function protecland_marker(feature, latlng) {
-        //     return L.circleMarker(latlng, {
-        //         radius: 8.0,
-        //         fillColor: '#11fe00',
-        //         color: '#000000',
-        //         weight: 1,
-        //         opacity: 1.0,
-        //         fillOpacity: 0.8
-        //     })
-        // }
-        // var protecland = new L.geoJson(exp_ne10mparksandprotectedlandspoint,{
-        //     onEachFeature: pop_prot,
-        //     pointToLayer: protecland_marker
-        // });
-        // protecland.addTo(map);
-        // function pop_popplaces(feature, layer) {
-        //     var popupContent = 'name: ' + String(feature.properties['name']) + '<br>pop_max: ' + String(feature.properties['pop_max']);
-        //     layer.bindPopup(popupContent);
-        // }
-        // function popplaces_marker(feature, latlng) {
-        //     return L.circleMarker(latlng, {
-        //         radius: 8.0,
-        //         fillColor: '#ff0000',
-        //         color: '#000000',
-        //         weight: 1,
-        //         opacity: 1.0,
-        //         fillOpacity: 0.8
-        //     })
-        // }
-        // var popplaces = new L.geoJson(exp_popplaces,{
-        //     onEachFeature: pop_popplaces,
-        //     pointToLayer: popplaces_marker
-        // });
-        // var cluster_popplaces= new L.MarkerClusterGroup({showCoverageOnHover: false});
-        // cluster_popplaces.addLayer(popplaces);
-        // cluster_popplaces.addTo(map);
-
+          function timestamp(str) {
+              return new Date(str).getTime();
+          }
         var geojson = L.geoJson(pa_covid, {
                         style: style,
                       }).addTo(map);
 
-
-        var baseMaps = {'OSM Black & White': basemap_0};
-        controler = L.control.layers(baseMaps,
+        controler = L.control.layers(base_layers,
               {
-                // "places": cluster_popplaces,
-                // "protected land points": protecland,
                 "COVID 19": geojson
               },{collapsed:false}).addTo(map);
 
-        var slidervar = document.getElementById('slider');
-            noUiSlider.create(slidervar, {
-                connect: true,
-                start: [ 1, 35676000 ],
+        var slider = document.getElementById('slider');
+        var date_text = document.getElementById('date');
+        noUiSlider.create(slider, {
+            // Create two timestamps to define a range.
                 range: {
-                    min: 1,
-                    max: 35676000
-                }
+                    min: timestamp('2019'),
+                    max: timestamp('2020')
+                },
+
+            // Steps of one week
+                step: 7 * 24 * 60 * 60 * 1000,
+
+            // Two more timestamps indicate the handle starting positions.
+                start: timestamp('2019'),
+
+            // No decimals
+                format: wNumb({
+                    decimals: 0
+                })
             });
+            slider.noUiSlider.on('update', function (values, handle) {
+              date_text.innerHTML = formatDate(new Date(+values[handle]));
+          });
+          // Create a list of day and month names.
+        var weekdays = [
+            "Sunday", "Monday", "Tuesday",
+            "Wednesday", "Thursday", "Friday",
+            "Saturday"
+        ];
+
+        var months = [
+            "January", "February", "March",
+            "April", "May", "June", "July",
+            "August", "September", "October",
+            "November", "December"
+        ];
+
+        // Append a suffix to dates.
+        // Example: 23 => 23rd, 1 => 1st.
+        function nth(d) {
+            if (d > 3 && d < 21) return 'th';
+            switch (d % 10) {
+                case 1:
+                    return "st";
+                case 2:
+                    return "nd";
+                case 3:
+                    return "rd";
+                default:
+                    return "th";
+            }
+        }
+
+        // Create a string representation of the date.
+        function formatDate(date) {
+            return weekdays[date.getDay()] + ", " + date.getDate() + nth(date.getDate()) + " " +  months[date.getMonth()] + " " +  date.getFullYear();
+        }
+            // noUiSlider.create(slidervar, {
+            //     connect: true,
+            //     start: [ 1, 35676000 ],
+            //     range: {
+            //         min: 1,
+            //         max: 35676000
+            //     }
+            // });
     </script>
 </body>
 </html>
